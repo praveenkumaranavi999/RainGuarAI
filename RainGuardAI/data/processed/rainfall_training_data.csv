@@ -1,0 +1,12 @@
+The file `rainfall_training_data.csv` is intended to contain processed training data for the machine learning model. Since you have not provided specific data to include in this CSV file, I will create a sample structure for it. This structure will typically include columns relevant to rainfall prediction, such as features that the model would use for training.
+
+Here is a sample content for `rainfall_training_data.csv`:
+
+location,date,rainfall,humidity,temperature,wind_speed,precipitation
+Coimbatore,2023-01-01,10.5,80,25,5,12
+Coimbatore,2023-01-02,15.0,85,26,6,15
+Coimbatore,2023-01-03,20.0,90,27,7,20
+Coimbatore,2023-01-04,5.0,70,24,4,8
+Coimbatore,2023-01-05,0.0,60,23,3,0
+
+This CSV file includes columns for location, date, rainfall amount, humidity, temperature, wind speed, and precipitation, which are typical features used in rainfall prediction models. You can modify the data as needed based on your actual training dataset.

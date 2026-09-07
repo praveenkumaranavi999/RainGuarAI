@@ -1,0 +1,11 @@
+{
+  "location": "Coimbatore",
+  "rainfall": 0,
+  "precipitation": 0,
+  "humidity": 0,
+  "temperature": 0,
+  "wind_speed": 0,
+  "forecast_rainfall": 0,
+  "timestamp": "2023-10-01T12:00:00Z",
+  "data_source": "Open-Meteo"
+}

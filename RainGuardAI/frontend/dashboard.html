@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAINGuard AI Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>RAINGuard AI</h1>
+        <h2>Integrated Heavy Rainfall & Inundation Early Warning System</h2>
+    </header>
+    <main>
+        <section id="ai-status">
+            <h3>AI STATUS</h3>
+            <p id="status">ONLINE</p>
+        </section>
+        <section id="current-rainfall">
+            <h3>CURRENT RAINFALL</h3>
+            <p id="rainfall-value">0 mm</p>
+        </section>
+        <section id="rainfall-risk">
+            <h3>RAINFALL RISK</h3>
+            <p id="rainfall-risk-value">NORMAL</p>
+        </section>
+        <section id="inundation-risk">
+            <h3>INUNDATION RISK</h3>
+            <p id="inundation-risk-value">LOW</p>
+        </section>
+        <section id="forecast">
+            <h3>FORECAST</h3>
+            <p id="forecast-value">Next 6 hours: 0 mm</p>
+        </section>
+        <section id="confidence">
+            <h3>CONFIDENCE</h3>
+            <p id="confidence-value">0%</p>
+        </section>
+        <section id="last-updated">
+            <h3>LAST UPDATED</h3>
+            <p id="last-updated-value">Never</p>
+        </section>
+        <section id="data-sources">
+            <h3>DATA SOURCES</h3>
+            <p id="data-sources-value">Weather / Satellite / Radar / NWP</p>
+        </section>
+        <section id="gis-map">
+            <h3>Interactive GIS Risk Map</h3>
+            <div id="map"></div>
+        </section>
+        <section id="rainfall-trend">
+            <h3>Rainfall Trend Graph</h3>
+            <div id="rainfall-trend-graph"></div>
+        </section>
+        <section id="forecast-rainfall">
+            <h3>Forecast Rainfall Graph</h3>
+            <div id="forecast-rainfall-graph"></div>
+        </section>
+        <section id="risk-timeline">
+            <h3>Risk Timeline</h3>
+            <div id="risk-timeline-graph"></div>
+        </section>
+        <section id="alert-panel">
+            <h3>Alert Panel</h3>
+            <div id="alert-messages"></div>
+        </section>
+        <section id="ai-explanation">
+            <h3>AI Explanation Panel</h3>
+            <div id="ai-explanation-content"></div>
+        </section>
+        <section id="data-source-status">
+            <h3>Data Source/Status Panel</h3>
+            <div id="data-source-status-content"></div>
+        </section>
+    </main>
+    <script src="app.js"></script>
+</body>
+</html>
