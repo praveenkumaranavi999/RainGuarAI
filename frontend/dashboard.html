@@ -1,31 +1,332 @@
-from fastapi import FastAPI
-from datetime import datetime
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RainGuard AI Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#eef5f7;color:#17324d}
+.container{max-width:1100px;margin:auto;padding:22px}
+header{background:#123b5d;color:white;padding:28px;border-radius:18px;margin-bottom:18px}
+h1{margin:0 0 8px;font-size:32px}.subtitle{opacity:.85}
+.status{margin-top:16px;background:#fff;color:#17324d;padding:14px 18px;border-radius:12px}
+.dot{color:#1a9b69;font-weight:bold}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:16px 0}
+.card{background:white;border-radius:16px;padding:22px;box-shadow:0 3px 14px #00000012}
+.label{font-size:14px;color:#667b8c;text-transform:uppercase;font-weight:bold}.value{font-size:30px;font-weight:bold;margin-top:10px}
+.normal{color:#198754}.low{color:#198754}.warn{color:#d9822b}.high{color:#c0392b}
+.section-title{font-size:23px;margin:0 0 15px}.wide{grid-column:1/-1}
+#riskMap{height:400px;border-radius:12px}
+.forecast{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.forecast-card{background:#edf6fa;border-radius:12px;padding:15px;text-align:center}
+.forecast-card strong{display:block;font-size:20px;margin-top:8px}
+button{border:0;border-radius:9px;padding:10px 15px;cursor:pointer;background:#1769aa;color:#fff}
+.small{font-size:13px;color:#6b7c88;margin-top:10px}
+footer{text-align:center;padding:20px;color:#71808c}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.forecast{grid-template-columns:repeat(2,1fr)}h1{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>🌧️ RainGuard AI</h1>
+<div class="subtitle">Integrated Heavy Rainfall & Inundation Early Warning System</div>
+<div class="status">AI SYSTEM STATUS: <span class="dot">● ONLINE</span> &nbsp; | &nbsp; 📍 Coimbatore</div>
+</header>
 
-app = FastAPI(title="RainGuard AI API")
+<div class="grid">
+<div class="card"><div class="label">Current Rainfall</div><div id="rainfall" class="value">Loading...</div></div>
+<div class="card"><div class="label">Rainfall Risk</div><div id="rainRisk" class="value">Loading...</div></div>
+<div class="card"><div class="label">Inundation Risk</div><div id="floodRisk" class="value">Loading...</div></div>
+<div class="card"><div class="label">AI Confidence</div><div class="value">Prototype</div></div>
 
+<div class="card wide">
+<h2 class="section-title">📊 6-Hour Rainfall Forecast</h2>
+<div id="forecast" class="forecast"></div>
+</div>
 
-@app.get("/")
-def home():
-    return {
-        "project": "RainGuard AI",
-        "status": "online",
-        "message": "AI Weather & Inundation Prediction API"
+<div class="card wide">
+<h2 class="section-title">🗺️ GIS Risk Map</h2>
+<div id="riskMap"></div>
+<p class="small">Prototype risk zones centered on Coimbatore. Production version can fuse satellite, radar, NWP and terrain data.</p>
+</div>
+
+<div class="card wide">
+<h2 class="section-title">🚨 Early Warning</h2>
+<div id="warning">Checking current conditions...</div>
+</div>
+
+<div class="card wide">
+<h2 class="section-title">🤖 AI Explanation</h2>
+<p id="explanation">RainGuard AI analyses rainfall conditions and estimates rainfall and inundation risk for early warning.</p>
+<p class="small" id="updated">Last updated: —</p>
+<button onclick="loadData()">↻ Refresh Data</button>
+</div>
+</div>
+
+<footer>RainGuard AI • Disaster Management Prototype</footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const API = "http://127.0.0.1:8010";
+const LAT = 11.0168, LON = 76.9558;
+
+function riskClass(value){
+  const v = String(value || "").toUpperCase();
+  if(v.includes("HIGH")) return "high";
+  if(v.includes("MODERATE")) return "warn";
+  return "low";
+}
+
+function setText(id, value, cls){
+  const el = document.getElementById(id);
+  el.textContent = value;
+  el.className = "value " + (cls || "");
+}
+
+function buildForecast(values){
+  const box = document.getElementById("forecast");
+  const hours = ["Now","+1h","+2h","+3h","+4h","+5h"];
+  box.innerHTML = hours.map((h,i) =>
+    '<div class="forecast-card"><span>'+h+'</span><strong>' +
+    Number(values[i] ?? 0).toFixed(1) + ' mm</strong></div>'
+  ).join("");
+}
+
+async function loadData(){
+  try{
+    const weather = await fetch(API + "/weather").then(r => r.json());
+    const risk = await fetch(API + "/risk").then(r => r.json());
+
+    setText("rainfall", (weather.rainfall_mm ?? weather.rainfall ?? 0) + " mm");
+    setText("rainRisk", risk.rainfall_risk || "NORMAL", riskClass(risk.rainfall_risk));
+    setText("floodRisk", risk.inundation_risk || "LOW", riskClass(risk.inundation_risk));
+
+    const forecast = weather.forecast_rainfall;
+    buildForecast(Array.isArray(forecast) ? forecast : [0,0,0,0,0,0.1]);
+
+    document.getElementById("warning").textContent =
+      String(risk.inundation_risk || "LOW").toUpperCase().includes("HIGH")
+      ? "⚠️ High inundation risk detected. Authorities should review the affected zones."
+      : "✅ No critical rainfall warning currently detected.";
+
+    document.getElementById("explanation").textContent =
+      "Rainfall risk: " + (risk.rainfall_risk || "NORMAL") +
+      ". Inundation risk: " + (risk.inundation_risk || "LOW") +
+      ". Current weather source: " + (weather.source || "Open-Meteo") + ".";
+
+    document.getElementById("updated").textContent =
+      "Last updated: " + (weather.updated || weather.timestamp || new Date().toLocaleString());
+  }catch(err){
+    document.getElementById("warning").textContent =
+      "Demo mode: backend API is not reachable. Start FastAPI to load live data.";
+    buildForecast([0,0,0,0,0,0.1]);
+    setText("rainfall","0 mm");
+    setText("rainRisk","NORMAL","normal");
+    setText("floodRisk","LOW","low");
+  }
+}
+
+const map = L.map("riskMap").setView([LAT,LON],11);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution:"&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+L.marker([LAT,LON]).addTo(map).bindPopup("<b>RainGuard AI</b><br>Coimbatore").openPopup();
+L.circle([LAT,LON],{radius:2000, color:"green", fillOpacity:.12}).addTo(map).bindPopup("LOW RISK ZONE");
+L.circle([LAT,LON],{radius:3500, color:"orange", fillOpacity:.10}).addTo(map).bindPopup("MODERATE RISK ZONE");
+L.circle([LAT,LON],{radius:5000, color:"red", fillOpacity:.07}).addTo(map).bindPopup("HIGH RISK ZONE");
+
+window.addEventListener("load", loadData);
+</script>
+<script>
+async function loadAIData() {
+    try {
+        const response = await fetch("http://127.0.0.1:8010/predict");
+        const data = await response.json();
+
+        console.log("AI Prediction:", data);
+
+        // AI confidence
+        const confidence = document.querySelector(".card:nth-child(4) .value");
+        if (confidence && data.confidence !== undefined) {
+            confidence.textContent = data.confidence + "%";
+        }
+
+        // Update AI status
+        document.querySelectorAll("body *").forEach(el => {
+            if (el.textContent.trim() === "Prototype") {
+                el.textContent = data.confidence
+                    ? data.confidence + "%"
+                    : "ONLINE";
+            }
+        });
+
+    } catch (error) {
+        console.log("AI API connection failed:", error);
+    }
+}
+
+loadAIData();
+</script>
+<script>
+async function loadRiskData() {
+    try {
+        const response = await fetch("http://127.0.0.1:8010/risk");
+        const data = await response.json();
+
+        console.log("Risk Data:", data);
+
+        // Find Early Warning text
+        const paragraphs = document.querySelectorAll("p");
+
+        paragraphs.forEach(p => {
+            if (p.textContent.includes("Demo mode") ||
+                p.textContent.includes("backend API is not reachable")) {
+
+                if (data.inundation_risk === "HIGH") {
+                    p.textContent =
+                        "🚨 HIGH ALERT: Heavy rainfall and possible inundation detected. Immediate attention required.";
+                }
+                else if (data.inundation_risk === "MODERATE") {
+                    p.textContent =
+                        "⚠️ MODERATE ALERT: Increased rainfall may cause localized inundation. Stay alert.";
+                }
+                else {
+                    p.textContent =
+                        "✅ NO ACTIVE WARNING: Current rainfall and inundation risk are LOW.";
+                }
+            }
+        });
+
+    } catch (error) {
+        console.log("Risk API connection failed:", error);
+    }
+}
+
+loadRiskData();
+</script>
+<script>
+async function loadRiskData() {
+    try {
+        const response = await fetch("http://127.0.0.1:8010/risk");
+        const data = await response.json();
+
+        console.log("Risk Data:", data);
+
+        // Find Early Warning text
+        const paragraphs = document.querySelectorAll("p");
+
+        paragraphs.forEach(p => {
+            if (p.textContent.includes("Demo mode") ||
+                p.textContent.includes("backend API is not reachable")) {
+
+                if (data.inundation_risk === "HIGH") {
+                    p.textContent =
+                        "🚨 HIGH ALERT: Heavy rainfall and possible inundation detected. Immediate attention required.";
+                }
+                else if (data.inundation_risk === "MODERATE") {
+                    p.textContent =
+                        "⚠️ MODERATE ALERT: Increased rainfall may cause localized inundation. Stay alert.";
+                }
+                else {
+                    p.textContent =
+                        "✅ NO ACTIVE WARNING: Current rainfall and inundation risk are LOW.";
+                }
+            }
+        });
+
+    } catch (error) {
+        console.log("Risk API connection failed:", error);
+    }
+}
+
+loadRiskData();
+</script>
+<script>
+async function loadRiskData() {
+    try {
+        const response = await fetch("http://127.0.0.1:8010/risk");
+        const data = await response.json();
+
+        console.log("Risk Data:", data);
+
+        // Find Early Warning text
+        const paragraphs = document.querySelectorAll("p");
+
+        paragraphs.forEach(p => {
+            if (p.textContent.includes("Demo mode") ||
+                p.textContent.includes("backend API is not reachable")) {
+
+                if (data.inundation_risk === "HIGH") {
+                    p.textContent =
+                        "🚨 HIGH ALERT: Heavy rainfall and possible inundation detected. Immediate attention required.";
+                }
+                else if (data.inundation_risk === "MODERATE") {
+                    p.textContent =
+                        "⚠️ MODERATE ALERT: Increased rainfall may cause localized inundation. Stay alert.";
+                }
+                else {
+                    p.textContent =
+                        "✅ NO ACTIVE WARNING: Current rainfall and inundation risk are LOW.";
+                }
+            }
+        });
+
+    } catch (error) {
+        console.log("Risk API connection failed:", error);
+    }
+}
+
+loadRiskData();
+</script>
+<script>
+async function refreshDashboard() {
+    const button = document.querySelector("button");
+
+    if (button) {
+        button.textContent = "⟳ Updating...";
+        button.disabled = true;
     }
 
+    try {
+        // Get live weather
+        const weatherResponse =
+            await fetch("http://127.0.0.1:8010/weather");
+        const weather = await weatherResponse.json();
 
-@app.get("/status")
-def status():
-    return {
-        "ai_status": "ONLINE",
-        "last_updated": datetime.now().isoformat()
+        // Get AI prediction
+        const predictResponse =
+            await fetch("http://127.0.0.1:8010/predict");
+        const prediction = await predictResponse.json();
+
+        // Get risk
+        const riskResponse =
+            await fetch("http://127.0.0.1:8010/risk");
+        const risk = await riskResponse.json();
+
+        console.log("LIVE WEATHER:", weather);
+        console.log("AI PREDICTION:", prediction);
+        console.log("RISK:", risk);
+
+        // Refresh page to display latest values
+        location.reload();
+
+    } catch (error) {
+        console.error("Dashboard update failed:", error);
+        alert("Backend API is not reachable. Please start FastAPI.");
+
+        if (button) {
+            button.textContent = "↻ Refresh Data";
+            button.disabled = false;
+        }
     }
+}
 
-
-@app.get("/risk")
-def risk():
-    return {
-        "location": "Coimbatore",
-        "rainfall_risk": "NORMAL",
-        "inundation_risk": "LOW",
-        "status": "AI READY"
-    }
+// Automatic refresh every 60 seconds
+setInterval(refreshDashboard, 60000);
+</script>
+</body>
+</html>
