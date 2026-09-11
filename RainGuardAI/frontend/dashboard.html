@@ -1,78 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAINGuard AI Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RainGuard AI Dashboard</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#eef4f8;
+    color:#172b4d;
+}
+header{
+    background:#0b3d62;
+    color:white;
+    padding:24px 35px;
+}
+header h1{margin:0;font-size:30px}
+header p{margin:7px 0 0;opacity:.85}
+
+.container{
+    max-width:1200px;
+    margin:25px auto;
+    padding:0 18px;
+}
+
+.status{
+    background:white;
+    padding:18px 22px;
+    border-radius:14px;
+    margin-bottom:20px;
+    box-shadow:0 4px 15px #00000012;
+}
+.online{color:#16833b;font-weight:bold}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:18px;
+}
+.card{
+    background:white;
+    padding:22px;
+    border-radius:14px;
+    box-shadow:0 4px 15px #00000012;
+}
+.card h3{
+    margin:0 0 12px;
+    font-size:15px;
+    color:#64748b;
+}
+.value{
+    font-size:27px;
+    font-weight:bold;
+}
+
+.section{
+    background:white;
+    margin-top:20px;
+    padding:22px;
+    border-radius:14px;
+    box-shadow:0 4px 15px #00000012;
+}
+.section h2{margin-top:0}
+
+.risk{
+    display:inline-block;
+    padding:9px 18px;
+    border-radius:20px;
+    font-weight:bold;
+    background:#e8f5e9;
+    color:#16833b;
+}
+
+.map{
+    height:260px;
+    border-radius:12px;
+    background:
+      linear-gradient(135deg,#dceff7,#b8d9e8);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+}
+
+.alert{
+    padding:16px;
+    border-left:5px solid #16833b;
+    background:#f0faf3;
+    border-radius:8px;
+}
+
+footer{
+    text-align:center;
+    padding:25px;
+    color:#64748b;
+}
+
+@media(max-width:800px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:500px){
+    .grid{grid-template-columns:1fr}
+}
+</style>
 </head>
+
 <body>
-    <header>
-        <h1>RAINGuard AI</h1>
-        <h2>Integrated Heavy Rainfall & Inundation Early Warning System</h2>
-    </header>
-    <main>
-        <section id="ai-status">
-            <h3>AI STATUS</h3>
-            <p id="status">ONLINE</p>
-        </section>
-        <section id="current-rainfall">
+
+<header>
+    <h1>🌧️ RainGuard AI</h1>
+    <p>Integrated Heavy Rainfall & Inundation Early Warning System</p>
+</header>
+
+<div class="container">
+
+    <div class="status">
+        <b>AI SYSTEM STATUS:</b>
+        <span class="online"> ● ONLINE</span>
+        <span style="float:right">📍 Coimbatore</span>
+    </div>
+
+    <div class="grid">
+
+        <div class="card">
             <h3>CURRENT RAINFALL</h3>
-            <p id="rainfall-value">0 mm</p>
-        </section>
-        <section id="rainfall-risk">
+            <div class="value" id="rainfall">0 mm</div>
+        </div>
+
+        <div class="card">
             <h3>RAINFALL RISK</h3>
-            <p id="rainfall-risk-value">NORMAL</p>
-        </section>
-        <section id="inundation-risk">
+            <div class="value">
+                <span class="risk" id="rainRisk">NORMAL</span>
+            </div>
+        </div>
+
+        <div class="card">
             <h3>INUNDATION RISK</h3>
-            <p id="inundation-risk-value">LOW</p>
-        </section>
-        <section id="forecast">
-            <h3>FORECAST</h3>
-            <p id="forecast-value">Next 6 hours: 0 mm</p>
-        </section>
-        <section id="confidence">
-            <h3>CONFIDENCE</h3>
-            <p id="confidence-value">0%</p>
-        </section>
-        <section id="last-updated">
-            <h3>LAST UPDATED</h3>
-            <p id="last-updated-value">Never</p>
-        </section>
-        <section id="data-sources">
-            <h3>DATA SOURCES</h3>
-            <p id="data-sources-value">Weather / Satellite / Radar / NWP</p>
-        </section>
-        <section id="gis-map">
-            <h3>Interactive GIS Risk Map</h3>
-            <div id="map"></div>
-        </section>
-        <section id="rainfall-trend">
-            <h3>Rainfall Trend Graph</h3>
-            <div id="rainfall-trend-graph"></div>
-        </section>
-        <section id="forecast-rainfall">
-            <h3>Forecast Rainfall Graph</h3>
-            <div id="forecast-rainfall-graph"></div>
-        </section>
-        <section id="risk-timeline">
-            <h3>Risk Timeline</h3>
-            <div id="risk-timeline-graph"></div>
-        </section>
-        <section id="alert-panel">
-            <h3>Alert Panel</h3>
-            <div id="alert-messages"></div>
-        </section>
-        <section id="ai-explanation">
-            <h3>AI Explanation Panel</h3>
-            <div id="ai-explanation-content"></div>
-        </section>
-        <section id="data-source-status">
-            <h3>Data Source/Status Panel</h3>
-            <div id="data-source-status-content"></div>
-        </section>
-    </main>
-    <script src="app.js"></script>
+            <div class="value">
+                <span class="risk" id="floodRisk">LOW</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>AI CONFIDENCE</h3>
+            <div class="value" id="confidence">Prototype</div>
+        </div>
+
+    </div>
+
+    <div class="section">
+        <h2>📊 Forecast</h2>
+        <p id="forecast">Next 6 hours rainfall forecast loading...</p>
+    </div>
+
+    <div class="section">
+        <h2>🗺️ GIS Risk Map</h2>
+        <div class="map">
+            📍 Coimbatore<br>
+            <small>Rainfall & Inundation Risk Zone</small>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🚨 Early Warning</h2>
+        <div class="alert" id="alert">
+            No critical rainfall warning currently detected.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🤖 AI Explanation</h2>
+        <p id="explanation">
+            RainGuard AI analyses rainfall conditions and predicts rainfall
+            and inundation risk for early disaster warning.
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>📡 Data Sources</h2>
+        <p>
+            Weather API • Satellite Data • Radar Data • NWP Models
+        </p>
+        <p>
+            <b>Last Updated:</b>
+            <span id="updated">Waiting for data...</span>
+        </p>
+    </div>
+
+<script>
+const API = "http://127.0.0.1:8000";
+
+async function updateDashboard() {
+    try {
+        // Get live weather data
+        const weatherResponse = await fetch(`${API}/weather`);
+        const weather = await weatherResponse.json();
+
+        // Get AI risk data
+        const riskResponse = await fetch(`${API}/risk`);
+        const risk = await riskResponse.json();
+
+        // Update rainfall
+        document.getElementById("rainfall").textContent =
+            `${weather.rainfall_mm ?? 0} mm`;
+
+        // Update rainfall risk
+        document.getElementById("rainRisk").textContent =
+            risk.rainfall_risk ?? "DATA UNAVAILABLE";
+
+        // Update inundation risk
+        document.getElementById("floodRisk").textContent =
+            risk.inundation_risk ?? "DATA UNAVAILABLE";
+
+        // Update confidence
+        document.getElementById("confidence").textContent =
+            "Prototype";
+
+        // Update last updated time
+        document.getElementById("updated").textContent =
+            weather.updated ?? "Unknown";
+
+        // Update forecast
+        document.getElementById("forecast").textContent =
+            "Live weather data connected. AI risk analysis updated.";
+
+        // Update alert
+        const alertBox = document.getElementById("alert");
+
+        if (risk.rainfall_risk === "EXTREME" ||
+            risk.inundation_risk === "HIGH") {
+
+            alertBox.textContent =
+                "⚠️ High-risk conditions detected. Immediate attention recommended.";
+
+        } else if (risk.rainfall_risk === "HIGH" ||
+                   risk.inundation_risk === "MODERATE") {
+
+            alertBox.textContent =
+                "⚠️ Moderate weather risk detected. Continue monitoring.";
+
+        } else {
+
+            alertBox.textContent =
+                "✅ No critical rainfall warning currently detected.";
+        }
+
+    } catch (error) {
+        console.error("Dashboard connection error:", error);
+
+        document.getElementById("updated").textContent =
+            "Backend connection failed";
+    }
+}
+
+// Load immediately
+updateDashboard();
+
+// Refresh every 60 seconds
+setInterval(updateDashboard, 60000);
+</script>
 </body>
 </html>

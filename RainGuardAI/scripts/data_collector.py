@@ -1,25 +1,88 @@
 import requests
 import json
-import os
+from pathlib import Path
+from datetime import datetime
 
-def fetch_live_weather_data():
-    # Replace with the actual API endpoint for live weather data
-    api_url = "https://api.example.com/weather"
-    
-    try:
-        response = requests.get(api_url)
-        response.raise_for_status()  # Raise an error for bad responses
-        weather_data = response.json()
-        
-        # Save the latest weather data to the raw data folder
-        raw_data_path = os.path.join(os.path.dirname(__file__), '../data/raw/latest_weather.json')
-        with open(raw_data_path, 'w') as json_file:
-            json.dump(weather_data, json_file)
-        
-        print("Successfully fetched and saved live weather data.")
-    
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching live weather data: {e}")
+LATITUDE = 11.0168
+LONGITUDE = 76.9558
+
+OUTPUT_FILE = Path("data/raw/latest_weather.json")
+
+URL = "https://api.open-meteo.com/v1/forecast"
+
+PARAMS = {
+    "latitude": LATITUDE,
+    "longitude": LONGITUDE,
+
+    "current": ",".join([
+        "temperature_2m",
+        "relative_humidity_2m",
+        "precipitation",
+        "rain",
+        "wind_speed_10m"
+    ]),
+
+    "hourly": ",".join([
+        "precipitation",
+        "rain"
+    ]),
+
+    "forecast_days": 2,
+    "timezone": "Asia/Kolkata"
+}
+
+
+def collect_weather():
+
+    print("Getting live weather data from Open-Meteo...")
+
+    response = requests.get(
+        URL,
+        params=PARAMS,
+        timeout=20
+    )
+
+    response.raise_for_status()
+
+    result = response.json()
+
+    OUTPUT_FILE.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    weather_data = {
+        "location": {
+            "name": "Coimbatore",
+            "latitude": LATITUDE,
+            "longitude": LONGITUDE
+        },
+
+        "source": "Open-Meteo",
+
+        "current": result.get("current", {}),
+
+        "hourly": result.get("hourly", {}),
+
+        "retrieved_at_utc": datetime.utcnow().isoformat()
+    }
+
+    with open(
+        OUTPUT_FILE,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        json.dump(
+            weather_data,
+            file,
+            indent=2
+        )
+
+    print("Weather data saved successfully.")
+    print("Current weather:")
+    print(weather_data["current"])
+
 
 if __name__ == "__main__":
-    fetch_live_weather_data()
+    collect_weather()

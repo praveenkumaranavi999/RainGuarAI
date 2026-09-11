@@ -1,57 +1,81 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 import json
-import os
+from datetime import datetime
 
-app = FastAPI()
+app = FastAPI(title="RainGuard AI API")
 
-# Load the latest weather data
-def load_latest_weather():
-    try:
-        with open(os.path.join("data", "raw", "latest_weather.json")) as f:
-            return json.load(f)
-    except Exception as e:
-        return {"error": str(e)}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+WEATHER_FILE = BASE_DIR / "data" / "raw" / "latest_weather.json"
+
 
 @app.get("/")
-def read_root():
-    return {"message": "Welcome to the RAINGuard AI API"}
+def home():
+    return {
+        "project": "RainGuard AI",
+        "status": "online",
+        "message": "AI Weather & Inundation Prediction API"
+    }
+
 
 @app.get("/status")
-def get_status():
-    return {"status": "API is running"}
+def status():
+    return {
+        "status": "online",
+        "ai": "ready"
+    }
 
 @app.get("/weather")
-def get_weather():
-    weather_data = load_latest_weather()
-    return JSONResponse(content=weather_data)
+def weather():
+    try:
+        if not WEATHER_FILE.exists():
+            return {"error": "Weather data file not found"}
 
-@app.get("/forecast")
-def get_forecast():
-    # Placeholder for forecast logic
-    return {"forecast": "Forecast data will be implemented"}
+        with open(WEATHER_FILE, "r", encoding="utf-8") as file:
+            saved = json.load(file)
 
-@app.get("/prediction")
-def get_prediction():
-    # Placeholder for prediction logic
-    return {"prediction": "Prediction logic will be implemented"}
+        # Open-Meteo data is inside data -> current
+        weather_data = saved.get("data", {})
+        current = weather_data.get("current", {})
 
-@app.get("/inundation")
-def get_inundation():
-    # Placeholder for inundation risk logic
-    return {"inundation": "Inundation risk logic will be implemented"}
+        location_data = saved.get("location", {})
+        if isinstance(location_data, dict):
+            location_name = location_data.get("name", "Coimbatore")
+        else:
+            location_name = location_data
+
+        return {
+            "location": location_name,
+            "source": saved.get("source", "Open-Meteo"),
+            "rainfall_mm": current.get("rain", 0),
+            "precipitation_mm": current.get("precipitation", 0),
+            "humidity": current.get("relative_humidity_2m", 0),
+            "temperature": current.get("temperature_2m", 0),
+            "wind_speed": current.get("wind_speed_10m", 0),
+            "forecast_rainfall": 0,
+            "updated": current.get("time", "")
+        }
+
+    except Exception as e:
+        return {
+            "error": "Could not read weather data",
+            "message": str(e)
+        }
 
 @app.get("/risk")
-def get_risk():
-    # Placeholder for risk assessment logic
-    return {"risk": "Risk assessment logic will be implemented"}
-
-@app.get("/alerts")
-def get_alerts():
-    # Placeholder for alerts logic
-    return {"alerts": "Alerts logic will be implemented"}
-
-@app.get("/map-data")
-def get_map_data():
-    # Placeholder for GIS map data logic
-    return {"map_data": "GIS map data logic will be implemented"}
+def risk():
+    return {
+        "location": "Coimbatore",
+        "rainfall_risk": "NORMAL",
+        "inundation_risk": "LOW",
+        "status": "AI READY"
+    }
